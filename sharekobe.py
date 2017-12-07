@@ -1,5 +1,5 @@
 from __future__ import unicode_literals     # <-文字列を全てunicodeとして扱う。
-import MeCab
+from janome.tokenizer import Tokenizer
 
 
 def levenshtein(s1, s2):
@@ -20,8 +20,15 @@ def kunrei(tango):
     """日本語の単語の読みを、訓令式ローマ字に変換する関数"""
 
     # MeCabで読みを取得する
-    m = MeCab.Tagger("-Oyomi")
-    tangoyomi = m.parse(tango).strip()
+#    m = MeCab.Tagger("-Oyomi")
+#    tangoyomi = m.parse(tango).strip()
+
+    # janome で音読みを取得する。
+    t = Tokenizer()
+    tokens = t.tokenize(tango)
+    tangoyomi = ""
+    for token in tokens:
+        tangoyomi += token.phonetic
 
     # カタカナと訓令式ローマ字対応表
     romantbl = [('ッキャ', 'kkya'),
@@ -328,6 +335,8 @@ def kunrei(tango):
     for kana, roman in romantbl:
         tangoyomi = tangoyomi.replace(kana, roman)
 
+    print(tangoyomi)
+
     return tangoyomi
 
 
@@ -340,15 +349,16 @@ def sharekobe(tango_input):
     omote = kunrei(tango_input)
 
     # ことわざ等のリスト（ura_iroha)を開いて、
-    with open('ura_iroha', 'rt') as f:
+    with open('kotowaza.txt', 'rt') as f:
         for row in f:
             columns = row.rstrip().split()
-            ura1 = columns[0]
-            ura2 = columns[1]
+            ura1 = columns[2]
+            ura2 = columns[4]
             lsa = levenshtein(omote, ura1)
 
             if 0 < lsa < len(ura1) * 0.5:
                 share = tango + ura2
+                print(ura1, columns[0])
                 print(share)
 
 
